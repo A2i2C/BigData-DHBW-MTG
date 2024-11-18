@@ -1,0 +1,40 @@
+version: '3.7'
+
+services:
+  hadoop:
+    container_name: hadoop
+    image: marcelmittelstaedt/spark_base:latest
+    ports:
+      - "8088:8088"  # Web UI für YARN
+      - "9870:9870"  # HDFS Web UI
+      - "9864:9864"  # HDFS Web UI
+      - "10000:10000"  # HiveServer2
+      - "8032:8032"  # Resource Manager
+      - "8030:8030"
+      - "8031:8031"
+      - "9000:9000"  # HDFS Namenode
+      - "8888:8888"  # Jupyter
+    volumes:
+      - ./airflow/notebooks:/home/hadoop/airflow/notebooks/
+    networks:
+      - bigdatanet
+
+  airflow:
+    container_name: airflow
+    build: ./airflow
+    image: azizcarducci/airflow:latest
+    ports:
+      - "8080:8080"  # Web UI für Airflow
+    environment:
+      - LOAD_EX=n
+      - EXECUTOR=LocalExecutor
+    volumes:
+      - ./airflow/dags:/home/airflow/airflow/dags/
+      - ./airflow/python:/home/airflow/airflow/python/
+    networks:
+      - bigdatanet
+
+
+networks:
+  bigdatanet:
+    driver: bridge
