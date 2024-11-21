@@ -36,7 +36,7 @@ if [ ! -e $CONTAINER_ALREADY_INITIALIZED ]; then
 
 	# Link Directories to Git Repo files
 	sudo -u airflow -H sh -c "ln -s /home/airflow/BigData/airflow/python/ /home/airflow/airflow/python"
-	sudo -u airflow -H sh -c "ln -s /home/airflow/BigData/dags/ /home/airflow/airflow/dags"
+	sudo -u airflow -H sh -c "ln -s /home/airflow/BigData/airflow/dags/ /home/airflow/airflow/dags"
 	#sudo -u airflow -H sh -c "ln -s /home/airflow/BigData/exercises/winter_semester_2020-2021/05_airflow/plugins/ /home/airflow/airflow/plugins"
 
 else

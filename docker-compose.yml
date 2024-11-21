@@ -14,8 +14,6 @@ services:
       - "8031:8031"
       - "9000:9000"  # HDFS Namenode
       - "8888:8888"  # Jupyter
-    volumes:
-      - ./airflow/notebooks:/home/hadoop/airflow/notebooks/
     networks:
       - bigdatanet
 
@@ -27,9 +25,6 @@ services:
     environment:
       - LOAD_EX=n
       - EXECUTOR=LocalExecutor
-    volumes:
-      - ./airflow/dags:/home/airflow/airflow/dags/
-      - ./airflow/python:/home/airflow/airflow/python/
     networks:
       - bigdatanet
 
