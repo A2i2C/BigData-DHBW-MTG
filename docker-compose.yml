@@ -3,7 +3,7 @@ version: '3.7'
 services:
   hadoop:
     container_name: hadoop
-    image: marcelmittelstaedt/spark_base:latest
+    build: ./hadoop
     ports:
       - "8088:8088"  # Web UI für YARN
       - "9870:9870"  # HDFS Web UI
@@ -22,7 +22,6 @@ services:
   airflow:
     container_name: airflow
     build: ./airflow
-    image: azizcarducci/airflow:latest
     ports:
       - "8080:8080"  # Web UI für Airflow
     environment:
@@ -51,9 +50,10 @@ services:
   backend:
     container_name: backend
     build: ./Backend
+    command: sh -c "npm run build && npm start"
     image: my-backend:latest
     ports:
-      - "5000:5000"  # Port für das Backend
+      - "5201:5201" 
     networks:
       - bigdatanet
     environment:
@@ -62,13 +62,12 @@ services:
       - DB_USER=root
       - DB_PASSWORD=userpassword
       - DB_NAME=mtg_database
-    depends_on:
-      - mysql	
+
 
   frontend:
     container_name: frontend
     build: ./Frontend
-    command: ng serve --host 0.0.0.0
+    command: ng serve --host
     ports:
       - "4200:4200"
     networks:

@@ -5,14 +5,14 @@ FROM node:18-alpine
 WORKDIR /usr/src/app
 
 # Copy package.json and package-lock.json
-COPY package.json package-lock.json ./
+COPY MTG-Cards-Frontend/package.json MTG-Cards-Frontend/package-lock.json ./
 
 # Install dependencies, including Angular CLI
 RUN npm install -g @angular/cli
 RUN npm install
 
 # Copy the Angular application source code
-COPY . .
+COPY MTG-Cards-Frontend/ ./
 
 # Expose the port the Angular app runs on
 EXPOSE 4200

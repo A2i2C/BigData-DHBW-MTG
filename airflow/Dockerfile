@@ -1,12 +1,11 @@
 FROM marcelmittelstaedt/airflow:latest
 
-# Switch to airflow user
-USER airflow
-WORKDIR /home/airflow
-
-# Install pymongo
-RUN pip3 install pymongo
-
-# Switch back to root user
+# Switch to root user
 USER root
-WORKDIR /
+
+# Ensure permissions are set to allow airflow user to access mounted volumes
+RUN chmod -R 777 /home/airflow/airflow/*
+
+# Use bash as the default entry point
+CMD ["airflow", "webserver", "--port", "8080"]
+
