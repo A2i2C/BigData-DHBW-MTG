@@ -1,11 +1,20 @@
 FROM marcelmittelstaedt/airflow:latest
 
-# Switch to root user
+USER airflow
+WORKDIR /home/airflow
+
+# Copy Airflow Config
+COPY --chown=airflow airflow.cfg /home/airflow/airflow/airflow.cfg
+
+# Switch back to Root User
 USER root
+WORKDIR /
 
-# Ensure permissions are set to allow airflow user to access mounted volumes
-RUN chmod -R 777 /home/airflow/airflow/*
+COPY startup.sh /startup.sh
+RUN chmod +x /startup.sh
 
-# Use bash as the default entry point
-CMD ["airflow", "webserver", "--port", "8080"]
+# Expose Airflow Web Service Port
+EXPOSE 8080
 
+# Start startup Script
+ENTRYPOINT ["/startup.sh"]
