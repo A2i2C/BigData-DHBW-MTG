@@ -12,7 +12,7 @@ services:
       - "8032:8032"  # Resource Manager
       - "8030:8030"
       - "8031:8031"
-      - "9000:9000"  # HDFS Namenode
+      - "9001:9000"  # HDFS Namenode
       - "8888:8888"  # Jupyter
     networks:
       - bigdatanet

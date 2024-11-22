@@ -11,7 +11,6 @@ from datetime import datetime
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.contrib.operators.spark_submit_operator import SparkSubmitOperator
-from airflow.operators.http_download_operations import HttpDownloadOperator
 from airflow.operators.hdfs_operations import HdfsPutFileOperator, HdfsGetFileOperator, HdfsMkdirFileOperator
 from airflow.operators.filesystem_operations import CreateDirectoryOperator
 from airflow.operators.filesystem_operations import ClearDirectoryOperator
@@ -67,12 +66,7 @@ clear_local_import_dir = ClearDirectoryOperator(
     dag=dag,
 )
 
-download_mtg_data = HttpDownloadOperator(
-    task_id='download_mtg_data',
-    download_uri='https://api.magicthegathering.io/v1/cards',
-    save_to='/home/airflow/mtg/cards_{{ ds }}.json',
-    dag=dag,
-)
+
 
 
 create_hdfs_mtg_partition_dir = HdfsMkdirFileOperator(
@@ -157,4 +151,4 @@ truncate_table = HiveOperator(
 
 
 
-create_local_import_dir >> clear_local_import_dir >> download_mtg_data >>  create_hdfs_mtg_partition_dir >>hdfs_put_mtg_data >> create_HiveTable_mtg_cards >> addPartition_HiveTable_mtg_cards >> pyspark_mtg_final_cards >> create_db >> create_table >> truncate_table >> pyspark_mtg_export_cards 
+create_local_import_dir >> clear_local_import_dir >>  create_hdfs_mtg_partition_dir >>hdfs_put_mtg_data >> create_HiveTable_mtg_cards >> addPartition_HiveTable_mtg_cards >> pyspark_mtg_final_cards >> create_db >> create_table >> truncate_table >> pyspark_mtg_export_cards 
