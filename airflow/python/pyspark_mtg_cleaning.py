@@ -1,65 +1,47 @@
-import pyspark
 from pyspark.sql import SparkSession
 import argparse
-from pyspark.sql.functions import col, expr, explode, concat_ws
+from pyspark.sql.functions import col, explode, concat_ws
 
 
 def get_args():
-    """
-    Parses Command Line Args.
-    """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--year',
-                        help='Partion Year To Process',
-                        required=True, type=str)
-    parser.add_argument('--month',
-                        help='Partion Month To Process',
-                        required=True, type=str)
-    parser.add_argument('--day',
-                        help='Partion Day To Process',
-                        required=True, type=str)
-    
+    parser.add_argument('--year', required=True, type=str)
+    parser.add_argument('--month', required=True, type=str)
+    parser.add_argument('--day', required=True, type=str)
     return parser.parse_args()
 
 
 def format_cards():
-    """
-    Format MTG Cards.
-    """
-    # Parse Command Line Args
     args = get_args()
 
-    # Initialize Spark Context
-    sc = pyspark.SparkContext()
-    spark = SparkSession(sc)
+    # Initialize Spark Session
+    print("Starting Spark Session")
+    spark = SparkSession.builder \
+        .appName("MTG Card Cleaning") \
+        .config("spark.hadoop.fs.defaultFS", "hdfs://hadoop:9001") \
+        .getOrCreate()
+    print("Spark Session started successfully")
 
     # Read raw cards from HDFS
-    mtg_cards_df = spark.read.json(f'/user/hadoop/mtg_raw/{args.year}/{args.month}/{args.day}')
+    input_path = f'/user/hadoop/mtg_raw/{args.year}/{args.month}/{args.day}'
+    print(f"Reading data from {input_path}")
+    mtg_cards_df = spark.read.json(input_path)
 
-    # Explode the array into single elements
-    mtg_cards_exploded_df = mtg_cards_df\
-        .select(explode('cards').alias('exploded'))\
-        .select('exploded.*')
+    # Transformations
+    mtg_cards_exploded_df = mtg_cards_df.select(explode(col('cards')).alias
+    ('exploded')).select
+    ('exploded.*')
 
-    # Replace all null values with empty strings
-    mtg_cards_renamed_null_df = mtg_cards_exploded_df\
-        .na.fill('')
+    mtg_cards_cleaned_df = mtg_cards_exploded_df.na.fill('').select
+    ('name', 'subtypes', 'text', 'artist', 'rarity', 'imageUrl').withColumn
+    ('subtypes', concat_ws(', ', 'subtypes'))
 
-    # Remove all unnecessary columns
-    columns = ['name', 'subtypes', 'text', 'artist', 'rarity', 'imageUrl']
-    reduced_cards_df = mtg_cards_renamed_null_df.select(*columns)
-
-    # Flatten the subtypes from an array to a comma seperated string
-    flattened_subtypes_df = reduced_cards_df\
-        .withColumn('subtypes', concat_ws(', ', 'subtypes'))
-
-    # Write data to HDFS
-    flattened_subtypes_df.write.format('json')\
-        .mode('overwrite')\
-        .save(f'/user/hadoop/mtg_final/{args.year}/{args.month}/{args.day}')
+    # Write to HDFS
+    output_path = f'/user/hadoop/mtg_final/{args.year}/{args.month}/{args.day}'
+    print(f"Writing transformed data to {output_path}")
+    mtg_cards_cleaned_df.write.format('json').mode('overwrite').save(output_path)
+    print("Data written successfully")
 
 
 if __name__ == '__main__':
     format_cards()
-
-

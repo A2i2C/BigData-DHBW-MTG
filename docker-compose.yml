@@ -25,6 +25,13 @@ services:
     environment:
       - LOAD_EX=n
       - EXECUTOR=LocalExecutor
+    volumes:
+     - type: bind
+       source: ./airflow/dags
+       target: /home/airflow/airflow/dags/
+     - type: bind
+       source: ./airflow/python
+       target: /home/airflow/airflow/python/
     networks:
       - bigdatanet
 
