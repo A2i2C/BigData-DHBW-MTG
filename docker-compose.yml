@@ -23,8 +23,8 @@ services:
     ports:
       - "8080:8080"  # Web UI für Airflow
     environment:
-      - LOAD_EX=n
-      - EXECUTOR=LocalExecutor
+      - load_examples=n
+      - executor_type=LocalExecutor
     volumes:
      - type: bind
        source: ./airflow/dags
@@ -35,19 +35,37 @@ services:
     networks:
       - bigdatanet
 
-  mysql:
-    container_name: mysql
-    image: mysql:latest
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword  # Root-Passwort für MySQL
-      MYSQL_DATABASE: mtg_database         # Standarddatenbank
-      MYSQL_USER: user                   # Benutzername
-      MYSQL_PASSWORD: userpassword       # Benutzer-Passwort
+  mongo:
+    image: mongo
+    container_name: mongo
     ports:
-      - "3307:3307"  # Standard MySQL-Port
+      - "27017:27017"
+    volumes: 
+      - mongo:/data/mongodb
+      - ./init.js:/docker-entrypoint-initdb.d/init.js
+    environment:
+      mongo_root_user: rootuser
+      mongo_root_password: rootpassword
+      mongo_database: mtg_database
     networks:
       - bigdatanet
 
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    environment:
+      mongo_server: mongo
+      mongo_port: 27017
+      mongo_enable_admin: 'false'
+      mongo_auth_database: mtg_database
+      mongo_auth_username: rootuser
+      mongo_auth_password: rootpassword
+    depends_on:
+      - mongo
+    ports:
+      - "8081:8081"
+    networks:
+      - bigdatanet
 
   backend:
     container_name: backend
@@ -59,12 +77,11 @@ services:
     networks:
       - bigdatanet
     environment:
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_USER=root
-      - DB_PASSWORD=userpassword
-      - DB_NAME=mtg_database
-
+      mongo_username: rootuser
+      mongo_password: rootpassword
+      mongo_database: mtg_database
+      mongo_hostname: mongo
+      mongo_port: 27017
 
   frontend:
     container_name: frontend
@@ -73,10 +90,10 @@ services:
     ports:
       - "4200:4200"
     networks:
-      bigdatanet:
+      - bigdatanet
 
 volumes:
-        mysql:
+  mongo:
 
 networks:
   bigdatanet:

@@ -1,1 +1,0 @@
-CREATE DATABASE IF NOT EXISTS mtg_database;
