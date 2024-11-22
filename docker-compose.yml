@@ -12,7 +12,7 @@ services:
       - "8032:8032"  # Resource Manager
       - "8030:8030"
       - "8031:8031"
-      - "9001:9000"  # HDFS Namenode
+      - "9000:9000"  # HDFS Namenode
       - "8888:8888"  # Jupyter
     networks:
       - bigdatanet
@@ -44,7 +44,7 @@ services:
       MYSQL_USER: user                   # Benutzername
       MYSQL_PASSWORD: userpassword       # Benutzer-Passwort
     ports:
-      - "3306:3306"  # Standard MySQL-Port
+      - "3307:3307"  # Standard MySQL-Port
     networks:
       - bigdatanet
 

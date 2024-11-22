@@ -40,3 +40,4 @@ build/
 WiredTiger*
 *.bson
 *mongod.lock
+airflow/dags/__pycache__/mtg.cpython-36.pyc
