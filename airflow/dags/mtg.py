@@ -8,29 +8,32 @@ See Lecture Material: https://github.com/marcelmittelstaedt/BigData
 """
 
 from datetime import datetime
+import requests
+import json
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python_operator import PythonOperator
 from airflow.contrib.operators.spark_submit_operator import SparkSubmitOperator
-from airflow.operators.hdfs_operations import HdfsPutFileOperator, HdfsGetFileOperator, HdfsMkdirFileOperator
+from airflow.operators.hdfs_operations import HdfsPutFileOperator, HdfsMkdirFileOperator
 from airflow.operators.filesystem_operations import CreateDirectoryOperator
 from airflow.operators.filesystem_operations import ClearDirectoryOperator
 from airflow.operators.hive_operator import HiveOperator
-from airflow.providers.mysql.operators.mysql import MySqlOperator
 
 args = {
-    'owner': 'airflow_mtg'
+    'owner': 'airflow_mtg',
+    'start_date': datetime(2024, 11, 17),
+    'catchup': False,
 }
 
-# Definiere den DAG
+# Define DAG
 dag = DAG(
     'mtg_data_etl',  # Name des DAGs
     description='ETL Pipeline for MTG Trading Cards',
     schedule_interval='@daily',  # Der DAG wird täglich ausgeführt
-    start_date=datetime(2024, 11, 17),  # Startdatum des DAGs
-    catchup=False,  # Verhindert, dass der DAG nachträglich ausgeführt wird
+    default_args=args,
 )
 
-hiveQL_create_table_mtg_cards='''
+hiveQL_create_table_mtg_cards = '''
 CREATE EXTERNAL TABLE IF NOT EXISTS mtg_cards(
     id STRING,
     name STRING,
@@ -44,13 +47,33 @@ PARTITIONED BY (partition_year INT, partition_month INT, partition_day INT)
 ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe'
 STORED AS TEXTFILE
 LOCATION '/user/hadoop/mtg_raw/mtg_cards'
-    '''
+'''
 
 hiveSQL_add_partition_mtg_cards = '''
 ALTER TABLE mtg_cards
 ADD IF NOT EXISTS partition(partition_year={{ macros.ds_format(ds, "%Y-%m-%d", "%Y") }}, partition_month={{ macros.ds_format(ds, "%Y-%m-%d", "%m") }}, partition_day={{ macros.ds_format(ds, "%Y-%m-%d", "%d") }})
 LOCATION '/user/hadoop/mtg_raw/mtg_cards/{{ macros.ds_format(ds, "%Y-%m-%d", "%Y") }}/{{ macros.ds_format(ds, "%Y-%m-%d", "%m") }}/{{ macros.ds_format(ds, "%Y-%m-%d", "%d") }}/';
 '''
+
+def fetch_mtg_data(**kwargs):
+    """
+    Fetch data from the MTG API and save to the specified location.
+    """
+    url = 'https://api.magicthegathering.io/v1/cards'
+    save_path = f"/home/airflow/mtg/cards_{kwargs['ds']}.json"
+    
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raise HTTPError for bad responses
+        data = response.json()
+        
+        with open(save_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f)
+        
+        print(f"MTG data successfully downloaded to {save_path}")
+    except Exception as e:
+        print(f"Error fetching MTG data: {e}")
+        raise
 
 create_local_import_dir = CreateDirectoryOperator(
     task_id='create_import_dir',
@@ -66,8 +89,12 @@ clear_local_import_dir = ClearDirectoryOperator(
     dag=dag,
 )
 
-
-
+download_mtg_data = PythonOperator(
+    task_id='download_mtg_data',
+    python_callable=fetch_mtg_data,
+    provide_context=True,
+    dag=dag,
+)
 
 create_hdfs_mtg_partition_dir = HdfsMkdirFileOperator(
     task_id='mkdir_hdfs_mtg_partition_dir',
@@ -106,10 +133,10 @@ pyspark_mtg_final_cards = SparkSubmitOperator(
     num_executors='2',
     name='spark_calculate_mtg',
     verbose=True,
-     application_args=['--year', '{{ macros.ds_format(ds, "%Y-%m-%d", "%Y")}}',
+    application_args=['--year', '{{ macros.ds_format(ds, "%Y-%m-%d", "%Y")}}',
                       '--month', '{{ macros.ds_format(ds, "%Y-%m-%d", "%m")}}',
                       '--day',  '{{ macros.ds_format(ds, "%Y-%m-%d", "%d")}}'],
-    dag = dag
+    dag=dag
 )
 
 pyspark_mtg_export_cards = SparkSubmitOperator(
@@ -125,30 +152,7 @@ pyspark_mtg_export_cards = SparkSubmitOperator(
     application_args=['--year', '{{ macros.ds_format(ds, "%Y-%m-%d", "%Y")}}',
                       '--month', '{{ macros.ds_format(ds, "%Y-%m-%d", "%m")}}',
                       '--day',  '{{ macros.ds_format(ds, "%Y-%m-%d", "%d")}}'],
-    dag = dag
+    dag=dag
 )
 
-create_db = HiveOperator(
-    task_id='create_database',
-    sql='/home/airflow/ddl/create_database.sql',
-    mysql_conn_id='mysql',  # Stelle sicher, dass du eine MySQL-Verbindung in Airflow konfiguriert hast
-    dag=dag,
-)
-
-create_table = HiveOperator(
-    task_id='create_table',
-    sql='/home/airflow/ddl/create_table.sql',
-    mysql_conn_id='mysql',  # Stelle sicher, dass du eine MySQL-Verbindung in Airflow konfiguriert hast
-    dag=dag,
-)
-
-truncate_table = HiveOperator(
-    task_id='truncate_table',
-    sql='/home/airflow/ddl/truncate_table.sql',
-    mysql_conn_id='mysql',  # Stelle sicher, dass du eine MySQL-Verbindung in Airflow konfiguriert hast
-    dag=dag,
-)
-
-
-
-create_local_import_dir >> clear_local_import_dir >>  create_hdfs_mtg_partition_dir >>hdfs_put_mtg_data >> create_HiveTable_mtg_cards >> addPartition_HiveTable_mtg_cards >> pyspark_mtg_final_cards >> create_db >> create_table >> truncate_table >> pyspark_mtg_export_cards 
+create_local_import_dir >> clear_local_import_dir >> download_mtg_data >> create_hdfs_mtg_partition_dir >> hdfs_put_mtg_data >> create_HiveTable_mtg_cards >> addPartition_HiveTable_mtg_cards >> pyspark_mtg_final_cards >> pyspark_mtg_export_cards
