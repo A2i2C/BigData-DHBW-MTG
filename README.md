@@ -10,12 +10,6 @@ Stelle sicher, dass du Docker und Docker Compose auf deinem Rechner installiert 
 
 ## Docker Compose Setup
 
-### Verzeichnisstruktur
-Die Verzeichnisstruktur für dieses Projekt sieht wie folgt aus:
-
-/project │ ├── docker-compose.yml # Docker Compose-Konfigurationsdatei ├── hadoop/ # Verzeichnis für den Hadoop-Container ├── airflow/ # Verzeichnis für den Airflow-Container │ ├── dags/ # DAGs für Airflow │ └── python/ # Python-Skripte für Airflow ├── postgresql/ # PostgreSQL-Container ├── backend/ # Node.js Backend ├── frontend/ # Web-Frontend └── README.md # Diese Datei
-
-
 ### Dienste in `docker-compose.yml`
 - **Hadoop**: Führt HDFS, YARN, Hive und Spark aus. Enthält die Web-Oberflächen für HDFS und YARN und stellt Speicher für die ETL-Daten bereit.
 - **Airflow**: Orchestriert die ETL-Pipeline. Führt täglich die Extraktion, Transformation und das Laden der MTG-Daten durch.
@@ -27,7 +21,6 @@ Die Verzeichnisstruktur für dieses Projekt sieht wie folgt aus:
 
 Um alle Dienste zu starten, führe folgenden Befehl im Hauptverzeichnis des Projekts aus:
 
-```bash
 docker-compose up --build
 
 Dieser Befehl baut die Docker-Images für alle Container und startet die Dienste.
