@@ -110,7 +110,7 @@ pyspark_mtg_final_cards = SparkSubmitOperator(
                       '--day',  '{{ macros.ds_format(ds, "%Y-%m-%d", "%d")}}'],
     dag = dag
 )
-"""
+
 pyspark_mtg_export_cards = SparkSubmitOperator(
     task_id='pyspark_export_mtg_cards',
     conn_id='spark',
@@ -126,7 +126,5 @@ pyspark_mtg_export_cards = SparkSubmitOperator(
                       '--day',  '{{ macros.ds_format(ds, "%Y-%m-%d", "%d")}}'],
     dag = dag
 )
-"""
 
-
-create_hdfs_mtg_partition_dir >> download_mtg_data >> create_HiveTable_mtg_cards >> addPartition_HiveTable_mtg_cards >> pyspark_mtg_final_cards 
+create_hdfs_mtg_partition_dir >> download_mtg_data >> create_HiveTable_mtg_cards >> addPartition_HiveTable_mtg_cards >> pyspark_mtg_final_cards >> pyspark_mtg_export_cards 

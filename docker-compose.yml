@@ -26,46 +26,23 @@ services:
       - load_examples=n
       - executor_type=LocalExecutor
     volumes:
-     - type: bind
-       source: ./airflow/dags
-       target: /home/airflow/airflow/dags/
-     - type: bind
-       source: ./airflow/python
-       target: /home/airflow/airflow/python/
+     - ./airflow/dags:/home/airflow/airflow/dags
+     - ./airflow/python:/home/airflow/airflow/python
     networks:
       - bigdatanet
 
-  mongo:
-    image: mongo
-    container_name: mongo
-    ports:
-      - "27017:27017"
-    volumes: 
-      - mongo:/data/mongodb
-      - ./init.js:/docker-entrypoint-initdb.d/init.js
+  postgresql:
+    container_name: postgresql
+    image: postgres:latest
     environment:
-      mongo_root_user: rootuser
-      mongo_root_password: rootpassword
-      mongo_database: mtg_database
-    networks:
-      - bigdatanet
-
-  mongo-express:
-    image: mongo-express
-    container_name: mongo-express
-    environment:
-      mongo_server: mongo
-      mongo_port: 27017
-      mongo_enable_admin: 'false'
-      mongo_auth_database: mtg_database
-      mongo_auth_username: rootuser
-      mongo_auth_password: rootpassword
-    depends_on:
-      - mongo
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_HOST: postgresql
     ports:
-      - "8081:8081"
+      - "5432:5432"
     networks:
-      - bigdatanet
+      bigdatanet:
 
   backend:
     container_name: backend
@@ -77,20 +54,21 @@ services:
     networks:
       - bigdatanet
     environment:
-      mongo_username: rootuser
-      mongo_password: rootpassword
-      mongo_database: mtg_database
-      mongo_hostname: mongo
-      mongo_port: 27017
+      POSTGRES_HOST: postgresql
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    depends_on:
+      - postgresql
 
-  frontend:
-    container_name: frontend
-    build: ./Frontend
-    command: ng serve --host
-    ports:
-      - "4200:4200"
-    networks:
-      - bigdatanet
+frontend:
+  container_name: frontend
+  build: ./Frontend
+  ports:
+    - "8080:80"
+  networks:
+    - bigdatanet
 
 volumes:
   mongo:

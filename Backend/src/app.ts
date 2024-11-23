@@ -1,37 +1,44 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import mysql from 'mysql2/promise';
+import { Pool } from 'pg';
 
 // Initialize Express App
 const app = express();
 const PORT = 5201;
 
-// MySQL Connection Pool
-const pool = mysql.createPool({
-    user: 'root',
-    port: 3306,   
-    password: 'userpassword', 
-    database: 'mtg_databse'
+// PostgreSQL Connection Pool
+const pool = new Pool({
+    host: 'postgresql', // Update as necessary
+    port: 5432,
+    database: 'postgres',
+    user: 'postgres',
+    password: 'postgres'
 });
 
 // Enable CORS
 app.use(cors());
-
 // Middleware
 app.use(express.json());
 
-// GET Request to Fetch Cards
+// GET Request to Fetch all Cards
 app.get('/cards', async (req: Request, res: Response) => {
     try {
-        const [rows] = await pool.query('SELECT * FROM mtg_cards');
-        res.json(rows); // Sende die abgerufenen Karten als JSON zurück
+        const result = await pool.query('SELECT * FROM cards LIMIT 102');
+        res.json(result.rows);
     } catch (error) {
         console.error('Error fetching cards:', error);
         res.status(500).send('Internal Server Error');
     }
 });
 
-// Start the Server
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+// GET Request to Fetch a Card by Name
+app.get('/cards/:name', async (req: Request, res: Response) => {
+    const { name } = req.params;
+    try {
+        const result = await pool.query('SELECT * FROM cards WHERE name ILIKE $1 LIMIT 102', [`%${name}%`]);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching card:', error);
+        res.status(500).send('Internal Server Error');
+    }
 });

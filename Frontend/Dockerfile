@@ -1,21 +1,11 @@
-# Use a Node.js base image
-FROM node:18-alpine
+# Basis-Image
+FROM nginx:latest
 
-# Set the working directory
-WORKDIR /usr/src/app
+# Arbeitsverzeichnis im Container erstellen
+WORKDIR /usr/share/nginx/html
 
-# Copy package.json and package-lock.json
-COPY MTG-Cards-Frontend/package.json MTG-Cards-Frontend/package-lock.json ./
+# Statische Dateien in den Container kopieren
+COPY index.html styles.css app.js ./
 
-# Install dependencies, including Angular CLI
-RUN npm install -g @angular/cli
-RUN npm install
-
-# Copy the Angular application source code
-COPY MTG-Cards-Frontend/ ./
-
-# Expose the port the Angular app runs on
-EXPOSE 4200
-
-# Default command to serve the Angular app
-CMD ["ng", "serve", "--host", "0.0.0.0"]
+# Standardport freigeben
+EXPOSE 80

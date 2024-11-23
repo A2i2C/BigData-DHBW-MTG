@@ -1,79 +1,87 @@
-import pyspark
 import argparse
 import json
-import pymysql
-
+import psycopg2
 from pyspark.sql import SparkSession
-from pyspark import SparkContext
-
 
 def get_args():
     """
     Parses command line args.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--year',
-                        help='Partition Year To Process',
-                        required=True, type=str)
-    parser.add_argument('--month',
-                        help='Partition Month To Process',
-                        required=True, type=str)
-    parser.add_argument('--day',
-                        help='Partition Day To Process',
-                        required=True, type=str)
-    
+    parser.add_argument('--year', help='Partition Year To Process', required=True, type=str)
+    parser.add_argument('--month', help='Partition Month To Process', required=True, type=str)
+    parser.add_argument('--day', help='Partition Day To Process', required=True, type=str)
+
     return parser.parse_args()
 
-
-def export_cards():
+def commitsql(conn, sql):
     """
-    Export final cards to MySQL.
+    Execute SQL commands.
     """
-    # Parse Command Line Args
-    args = get_args()
+    cur = conn.cursor()
+    cur.execute(sql)
+    conn.commit()
+    cur.close()
 
-    # Initialize Spark Context
-    sc = pyspark.SparkContext()
-    spark = SparkSession(sc)
-
-    # Read final cards as json from HDFS
-    mtg_cards_df = spark.read.json(f'/user/hadoop/mtg/final/{args.year}/{args.month}/{args.day}')
-
-    # Optional: Hier kannst du Transformationen oder Bereinigungen auf deinem DataFrame durchführen
-    # Zum Beispiel Spalten umbenennen oder transformieren, falls nötig
-    # mtg_cards_df = mtg_cards_df.select("id", "name", "type", ...)
-
-    # Convert DataFrame to list of dictionaries (JSON-like format)
-    mtg_cards_json = mtg_cards_df.collect()
-
-    # Connect to MySQL
-    connection = pymysql.connect(host='localhost', user='user', password='userpassword', database='mtg_database')
-    cursor = connection.cursor()
-
-    # Create a SQL insert query (Anpassen je nach Struktur deiner Tabelle)
-    insert_query = """
-    INSERT INTO mtg_cards (name, artist, type, manaCost, rarity)
-    VALUES (%s, %s, %s, %s, %s)
+def drop_table(conn):
     """
-    
-    # Loop through the records and insert them into MySQL
-    for card in mtg_cards_json:
-        # Anpassung je nach den Namen der Spalten in deinem DataFrame und der MySQL-Tabelle
-        values = (
-            card['name'],
-            card.get('artist', None),  # Beispiel für optionale Felder
-            card.get('type', None),
-            card.get('manaCost', None),
-            card.get('rarity', None)
-        )
-        
-        cursor.execute(insert_query, values)
+    Drop table in PostgreSQL.
+    """
+    sql = """
+        DROP TABLE IF EXISTS cards;
+    """
+    commitsql(conn, sql)
 
-    # Commit und Verbindung schließen
-    connection.commit()
-    cursor.close()
-    connection.close()
+def create_table(conn):
+    """
+    Create table in PostgreSQL.
+    """
+    sql = """
+        CREATE TABLE IF NOT EXISTS cards (
+    name VARCHAR(255),
+    subtypes VARCHAR(255),
+    text TEXT,
+    artist VARCHAR(255),
+    rarity VARCHAR(50),
+    imageUrl VARCHAR(255)
+);
+    """
+    commitsql(conn, sql)
+
 
 
 if __name__ == '__main__':
-    export_cards()
+    args = get_args()
+    spark = SparkSession.builder \
+    .appName("spark_export_cards_to_postgresql") \
+    .getOrCreate()
+
+    # Read final cards as json from HDFS
+    processed_cards_df = spark.read.json(f'/user/hadoop/mtg_final/{args.year}/{args.month}/{args.day}')
+
+    # Convert dataframe to json
+    mtg_cards_json = processed_cards_df.toJSON().map(lambda j: json.loads(j)).collect()
+
+    # Connect to PostgreSQL
+    conn = psycopg2.connect(
+        host="postgresql",
+        port="5432",
+        database="postgres",
+        user="postgres",
+        password="postgres"
+    )
+
+    # Drop and create table
+    cur = conn.cursor()
+    drop_table(conn)
+    create_table(conn)
+    for row in processed_cards_df.collect():
+            cur.execute("""
+                INSERT INTO cards (name, subtypes, text, artist, rarity, imageUrl)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (row['name'], row['subtypes'], row['text'], row['artist'], row['rarity'], row['imageUrl']))
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
