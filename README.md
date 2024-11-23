@@ -94,3 +94,22 @@ Das Backend stellt eine einfache API bereit, die eine GET-Anfrage verarbeitet, u
 GET http://localhost:5201/cards
 ```
 
+## DDL
+
+Ein dedizierten Ordner für die DDL gibt es nicht, da ich nur eine Tabelle kreeirt habe und deren Dateipfadweg das System verkomplifiziert haben, die DDL ist
+```console
+CREATE TABLE IF NOT EXISTS cards (
+    name VARCHAR(255),
+    subtypes VARCHAR(255),
+    text TEXT,
+    artist VARCHAR(255),
+    rarity VARCHAR(50),
+    imageUrl VARCHAR(255)
+);
+```
+Es gibt noch eine DDL für das Dropen der Tabelle um diese zu leeren, sicherheitshalber
+
+```console
+DROP TABLE IF EXISTS cards;
+```
+
