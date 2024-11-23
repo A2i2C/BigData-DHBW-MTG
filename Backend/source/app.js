@@ -1,13 +1,16 @@
-import express, { Request, Response } from 'express';
-import cors from 'cors';
-import { Pool } from 'pg';
 
-// Initialize Express App
+import cors from 'cors';
+import pkg from 'pg';
+import express from 'express';
+
+const { Pool } = pkg;
+
 const app = express();
 const PORT =3000;
 
 app.use(cors());
-app.use(express.json());
+
+
 // PostgreSQL Connection Pool
 const pool = new Pool({
     host: 'postgresql',
@@ -17,7 +20,13 @@ const pool = new Pool({
     password: 'postgres'
 });
 
-
+pool.query('SELECT 1', (err, res) => {
+    if (err) {
+        console.error('Database connection failed:', err);
+    } else {
+        console.log('Database connected successfully.');
+    }
+});
 
 // GET Request to Fetch all Cards
 app.get('/cards', async (req, res) => {

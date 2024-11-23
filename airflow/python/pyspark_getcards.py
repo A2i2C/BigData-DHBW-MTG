@@ -4,7 +4,7 @@ import requests
 import os
 from pyspark.sql import SparkSession
 
-LIMIT = 1 #Anzahl der Seiten, für Zeit und Ressourcen sparen
+LIMIT = 10 #Anzahl der Seiten, für Zeit und Ressourcen sparen
 
 def get_args():
     parser = argparse.ArgumentParser()

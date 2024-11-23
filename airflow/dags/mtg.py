@@ -10,15 +10,8 @@ See Lecture Material: https://github.com/marcelmittelstaedt/BigData
 from datetime import datetime
 from airflow import DAG
 from airflow.contrib.operators.spark_submit_operator import SparkSubmitOperator
-from airflow.operators.http_download_operations import HttpDownloadOperator
-from airflow.operators.hdfs_operations import HdfsPutFileOperator, HdfsGetFileOperator, HdfsMkdirFileOperator
-from airflow.operators.filesystem_operations import CreateDirectoryOperator
-from airflow.operators.filesystem_operations import ClearDirectoryOperator
+from airflow.operators.hdfs_operations import HdfsMkdirFileOperator
 from airflow.operators.hive_operator import HiveOperator
-from airflow.operators.python_operator import PythonOperator
-import requests
-import json
-import os
 
 args = {
     'owner': 'airflow_mtg'
@@ -68,10 +61,10 @@ download_mtg_data = SparkSubmitOperator(
     task_id='download_mtg_data',
     conn_id='spark',
     application='/home/airflow/airflow/python/pyspark_getcards.py',
-    total_executor_cores='1',
-    executor_cores='1',
-    executor_memory='1g',
-    num_executors='1',
+    total_executor_cores='2',
+    executor_cores='2',
+    executor_memory='2g',
+    num_executors='2',
     name='spark_download_mtg',
     application_args=[
         '--year', '{{ macros.ds_format(ds, "%Y-%m-%d", "%Y") }}',
@@ -107,7 +100,10 @@ pyspark_mtg_final_cards = SparkSubmitOperator(
     verbose=True,
      application_args=['--year', '{{ macros.ds_format(ds, "%Y-%m-%d", "%Y")}}',
                       '--month', '{{ macros.ds_format(ds, "%Y-%m-%d", "%m")}}',
-                      '--day',  '{{ macros.ds_format(ds, "%Y-%m-%d", "%d")}}'],
+                      '--day',  '{{ macros.ds_format(ds, "%Y-%m-%d", "%d")}}',
+                      '--hdfs_raw', '/user/hadoop/mtg_raw/{{ macros.ds_format(ds, "%Y-%m-%d", "%Y") }}/{{ macros.ds_format(ds, "%Y-%m-%d", "%m") }}/{{ macros.ds_format(ds, "%Y-%m-%d", "%d") }}',
+                      '--hdfs_final', '/user/hadoop/mtg_final/{{ macros.ds_format(ds, "%Y-%m-%d", "%Y") }}/{{ macros.ds_format(ds, "%Y-%m-%d", "%m") }}/{{ macros.ds_format(ds, "%Y-%m-%d", "%d") }}',
+                      '--format', 'json'],  
     dag = dag
 )
 
@@ -123,7 +119,8 @@ pyspark_mtg_export_cards = SparkSubmitOperator(
     verbose=True,
     application_args=['--year', '{{ macros.ds_format(ds, "%Y-%m-%d", "%Y")}}',
                       '--month', '{{ macros.ds_format(ds, "%Y-%m-%d", "%m")}}',
-                      '--day',  '{{ macros.ds_format(ds, "%Y-%m-%d", "%d")}}'],
+                      '--day',  '{{ macros.ds_format(ds, "%Y-%m-%d", "%d")}}',
+                      '--hdfs_path', '/user/hadoop/mtg_final/{{ macros.ds_format(ds, "%Y-%m-%d", "%Y") }}/{{ macros.ds_format(ds, "%Y-%m-%d", "%m") }}/{{ macros.ds_format(ds, "%Y-%m-%d", "%d") }}'],
     dag = dag
 )
 

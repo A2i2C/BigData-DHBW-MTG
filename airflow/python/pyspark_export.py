@@ -4,38 +4,26 @@ import psycopg2
 from pyspark.sql import SparkSession
 
 def get_args():
-    """
-    Parses command line args.
-    """
     parser = argparse.ArgumentParser()
     parser.add_argument('--year', help='Partition Year To Process', required=True, type=str)
     parser.add_argument('--month', help='Partition Month To Process', required=True, type=str)
     parser.add_argument('--day', help='Partition Day To Process', required=True, type=str)
-
+    parser.add_argument('--hdfs_path', help='HDFS Path To Read Final Data From', required=True, type=str)
     return parser.parse_args()
 
 def commitsql(conn, sql):
-    """
-    Execute SQL commands.
-    """
     cur = conn.cursor()
     cur.execute(sql)
     conn.commit()
     cur.close()
 
 def drop_table(conn):
-    """
-    Drop table in PostgreSQL.
-    """
     sql = """
         DROP TABLE IF EXISTS cards;
     """
     commitsql(conn, sql)
 
 def create_table(conn):
-    """
-    Create table in PostgreSQL.
-    """
     sql = """
         CREATE TABLE IF NOT EXISTS cards (
     name VARCHAR(255),
@@ -57,7 +45,7 @@ if __name__ == '__main__':
     .getOrCreate()
 
     # Read final cards as json from HDFS
-    processed_cards_df = spark.read.json(f'/user/hadoop/mtg_final/{args.year}/{args.month}/{args.day}')
+    processed_cards_df = spark.read.json(args.hdfs_path)
 
     # Convert dataframe to json
     mtg_cards_json = processed_cards_df.toJSON().map(lambda j: json.loads(j)).collect()

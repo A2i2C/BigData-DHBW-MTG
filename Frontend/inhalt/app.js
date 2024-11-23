@@ -1,4 +1,5 @@
-const API_BASE_URL = 'http://localhost:5201'; // Backend-Endpunkt
+const API_BASE_URL = 'http://localhost:3000'; // Backend-Endpunkt
+//Für Nicht Lokale Endpunkte ändern
 
 const cardList = document.getElementById('cardList');
 
@@ -53,6 +54,7 @@ const fetchCardByName = async (name) => {
 };
 
 // Event-Listener
+document.addEventListener('DOMContentLoaded', fetchAllCards);
 document.getElementById('loadAllCards').addEventListener('click', fetchAllCards);
 document.getElementById('searchCardButton').addEventListener('click', () => {
     const name = document.getElementById('searchCard').value.trim();

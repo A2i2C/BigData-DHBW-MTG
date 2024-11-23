@@ -1,7 +1,8 @@
 import pyspark
 from pyspark.sql import SparkSession
 import argparse
-from pyspark.sql.functions import col, expr, explode, concat_ws
+import os
+from pyspark.sql.functions import col, explode, concat_ws
 
 def get_args():
     """
@@ -11,6 +12,10 @@ def get_args():
     parser.add_argument('--year', help='Partition Year To Process', required=True, type=str)
     parser.add_argument('--month', help='Partition Month To Process', required=True, type=str)
     parser.add_argument('--day', help='Partition Day To Process', required=True, type=str)
+    parser.add_argument('--hdfs_raw', help='HDFS Path To Read Data From', required=True, type=str)
+    parser.add_argument('--hdfs_final', help='HDFS Path To Write Data To', required=True, type=str)
+    parser.add_argument('--format', help='Output Format', required=True, type=str)
+
 
     return parser.parse_args()
 
@@ -20,7 +25,8 @@ if __name__ == '__main__':
     spark = SparkSession(sc)
 
     # Read raw cards from HDFS
-    mtg_cards_df = spark.read.json(f'/user/hadoop/mtg_raw/{args.year}/{args.month}/{args.day}/cards_{args.year}-{args.month}-{args.day}.json')
+    hdfs_raw_path = os.path.join(args.hdfs_raw, f"cards_{args.year}-{args.month}-{args.day}.json")
+    mtg_cards_df = spark.read.json(hdfs_raw_path)
 
     # Explode the array into single elements
     mtg_cards_exploded_df = mtg_cards_df \
@@ -44,6 +50,6 @@ if __name__ == '__main__':
     filtered_cards_df = mtg_cards_cleaned_df.filter(col('imageUrl') != '')
 
     # Write data to HDFS
-    filtered_cards_df.write.format('json') \
+    filtered_cards_df.write.format(args.format) \
         .mode('overwrite') \
-        .save(f'/user/hadoop/mtg_final/{args.year}/{args.month}/{args.day}')
+        .save(args.hdfs_final)

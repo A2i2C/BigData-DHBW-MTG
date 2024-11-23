@@ -65,7 +65,11 @@ services:
     container_name: frontend
     build: ./Frontend
     ports:
-      - "3659:8000"
+      - "8000:8000"
+    volumes:
+      - ./Frontend/inhalt:/app  # Volumen: Lokales Verzeichnis 'inhalt' wird im Container sichtbar
+    environment:
+      - PYTHONUNBUFFERED=1  # Macht das Logging in Echtzeit sichtbar
     networks:
       - bigdatanet
 
