@@ -4,24 +4,23 @@ import { Pool } from 'pg';
 
 // Initialize Express App
 const app = express();
-const PORT = 5201;
+const PORT =3000;
 
+app.use(cors());
+app.use(express.json());
 // PostgreSQL Connection Pool
 const pool = new Pool({
-    host: 'postgresql', // Update as necessary
+    host: 'postgresql',
     port: 5432,
     database: 'postgres',
     user: 'postgres',
     password: 'postgres'
 });
 
-// Enable CORS
-app.use(cors());
-// Middleware
-app.use(express.json());
+
 
 // GET Request to Fetch all Cards
-app.get('/cards', async (req: Request, res: Response) => {
+app.get('/cards', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM cards LIMIT 102');
         res.json(result.rows);
@@ -32,7 +31,7 @@ app.get('/cards', async (req: Request, res: Response) => {
 });
 
 // GET Request to Fetch a Card by Name
-app.get('/cards/:name', async (req: Request, res: Response) => {
+app.get('/cards/:name', async (req, res) => {
     const { name } = req.params;
     try {
         const result = await pool.query('SELECT * FROM cards WHERE name ILIKE $1 LIMIT 102', [`%${name}%`]);
@@ -41,4 +40,9 @@ app.get('/cards/:name', async (req: Request, res: Response) => {
         console.error('Error fetching card:', error);
         res.status(500).send('Internal Server Error');
     }
+});
+
+// Start the Server
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
 });

@@ -48,11 +48,8 @@ services:
     container_name: backend
     build: ./Backend
     command: npm start
-    image: my-backend:latest
     ports:
-      - "5201:5201" 
-    networks:
-      - bigdatanet
+      - "3000:3000"
     environment:
       POSTGRES_HOST: postgresql
       POSTGRES_PORT: 5432
@@ -61,6 +58,8 @@ services:
       POSTGRES_DB: postgres
     depends_on:
       - postgresql
+    networks:
+      bigdatanet:
 
   frontend:
     container_name: frontend
