@@ -20,9 +20,17 @@ Stelle sicher, dass du Docker und Docker Compose auf deinem Rechner installiert 
 ## Docker Compose starten
 
 Um alle Dienste zu starten, führe folgenden Befehl im Hauptverzeichnis des Projekts aus:
-
-```bash
 docker-compose up --build
+
+Danach um Hadoop zu Starten nocheinmal diese Befehle nacheinander:
+'''bash
+docker start hadoop
+docker exec -it hadoop /bin/bash
+sudo su hadoop 
+cd
+start-all.sh
+hiveserver2
+'''
 
 Dieser Befehl baut die Docker-Images für alle Container und startet die Dienste.
 
