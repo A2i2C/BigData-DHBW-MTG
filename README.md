@@ -56,6 +56,7 @@ ENTRYPOINT ["/startup.sh"]
 ```
 
 **Für Hadoop:**
+```console
 USER root
 WORKDIR /
 
