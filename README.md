@@ -41,6 +41,30 @@ Dieser Befehl baut die Docker-Images für alle Container und startet die Dienste
 - **Hadoop Web UI** für YARN ist unter [http://localhost:8088](http://localhost:8088) und für HDFS unter [http://localhost:9870](http://localhost:9870) erreichbar.
 - **Frontend Web UI** ist unter [http://localhost:3659](http://localhost:3659) erreichbar.
 
+Es ist möglich in der Airflow Dockerfile und Hadoop Dockerfile, die beiligende startall.sh einzubinden, was Zeit erspart da hierbei schon mein Github ETL direkt reingeladen wird und die Hadoop Commands von oben werden überflüssig
+**Für Airflow:**
+```console
+USER root
+WORKDIR /
+
+COPY startup.sh /startup.sh
+RUN chmod +x /startup.sh
+
+EXPOSE 8080
+
+ENTRYPOINT ["/startup.sh"]
+```
+
+**Für Hadoop:**
+USER root
+WORKDIR /
+
+COPY startup.sh /startup.sh
+RUN chmod +x /startup.sh
+ENTRYPOINT ["/startup.sh"]
+```
+
+
 ## ETL-Pipeline (Airflow DAG)
 Die ETL-Pipeline wird in Airflow über einen DAG (Directed Acyclic Graph) verwaltet, der in `airflow/dags/` gespeichert ist. Die Pipeline besteht aus mehreren Aufgaben:
 
