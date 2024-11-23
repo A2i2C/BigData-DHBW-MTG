@@ -47,7 +47,7 @@ services:
   backend:
     container_name: backend
     build: ./Backend
-    command: sh -c "npm run build && npm start"
+    command: npm start
     image: my-backend:latest
     ports:
       - "5201:5201" 
@@ -62,16 +62,13 @@ services:
     depends_on:
       - postgresql
 
-frontend:
-  container_name: frontend
-  build: ./Frontend
-  ports:
-    - "8080:80"
-  networks:
-    - bigdatanet
-
-volumes:
-  mongo:
+  frontend:
+    container_name: frontend
+    build: ./Frontend
+    ports:
+      - "3659:8000"
+    networks:
+      - bigdatanet
 
 networks:
   bigdatanet:

@@ -1,11 +1,14 @@
-# Basis-Image
-FROM nginx:latest
+# Verwende ein einfaches Python-Image
+FROM python:3.9-slim
 
-# Arbeitsverzeichnis im Container erstellen
-WORKDIR /usr/share/nginx/html
+# Setze das Arbeitsverzeichnis im Container
+WORKDIR /app
 
-# Statische Dateien in den Container kopieren
-COPY index.html styles.css app.js ./
+# Kopiere die statischen Dateien (index.html, styles.css, app.js) in das Container-Arbeitsverzeichnis
+COPY ./inhalt /app
 
-# Standardport freigeben
-EXPOSE 80
+# Exponiere Port 8000 für den HTTP-Server
+EXPOSE 8000
+
+# Starte den einfachen HTTP-Server auf Port 8000
+CMD ["python", "-m", "http.server", "8000"]

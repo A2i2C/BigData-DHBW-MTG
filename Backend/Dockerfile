@@ -1,24 +1,12 @@
-# Verwende Node.js als Basis-Image
+# Use a Node.js base image
 FROM node:18-alpine
 
-# Setze das Arbeitsverzeichnis
 WORKDIR /usr/src/app
-
-# Kopiere die package.json und package-lock.json
-COPY package.json ./
-COPY tsconfig.json ./
-
-# Installiere die Abhängigkeiten
+COPY package.json tsconfig.json ./
 RUN npm install
-
-# Kopiere den gesamten Quellcode in den Container
 COPY ./src ./src
-
-# Baue die TypeScript-Dateien
-RUN npm run build 
-
-# Exponiere den Port, den die App verwenden wird
+RUN npm run build
 EXPOSE 5201
 
-# Startbefehl für die Anwendung
+# Start the application
 CMD ["npm", "start"]
