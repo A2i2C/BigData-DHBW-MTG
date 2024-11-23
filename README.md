@@ -74,9 +74,7 @@ Die ETL-Pipeline wird in Airflow über einen DAG (Directed Acyclic Graph) verwal
 3. **Erstellen einer Hive-Tabelle**: Eine Hive-Tabelle wird für die MTG-Daten erstellt, um die Daten später analysieren zu können.
 4. **Hinzufügen von Partitionen**: Neue Partitionen für die MTG-Daten werden zur Hive-Tabelle hinzugefügt.
 5. **Datenbereinigung und Transformation**: Mit einer weiteren Spark-Anwendung werden die Daten bereinigt und transformiert.
-6. **Export der finalen Daten**: Die bereinigten Daten werden in das finale Format exportiert und können weiterverarbeitet oder analysiert werden.
-
-Der DAG wird **täglich** ausgeführt, basierend auf dem aktuellen Datum.
+6. **Export der finalen Daten**: Die bereinigten Daten werden in die Postgres Datenbank gespeichert und können weiterverarbeitet werden.
 
 ## Frontend
 Das Frontend stellt eine einfache Web-Oberfläche zur Verfügung, um die MTG-Daten zu visualisieren. Es besteht aus den Dateien:
@@ -85,13 +83,14 @@ Das Frontend stellt eine einfache Web-Oberfläche zur Verfügung, um die MTG-Dat
 - **styles.css**: Das Stylesheet für das Layout der Seite.
 - **app.js**: Das JavaScript für die Interaktivität der Anwendung.
 
-Im Dockerfile des Frontends verwenden wir Nginx, um die statischen Dateien bereitzustellen.
+Im Dockerfile des Frontends verwenden wir Node.
 
 ## Backend API
 Das Backend stellt eine einfache API bereit, die eine GET-Anfrage verarbeitet, um die MTG-Daten aus der PostgreSQL-Datenbank abzurufen.
 
 **Beispiel-API-Endpunkt:**
 
-```bash
+```console
 GET http://localhost:5201/cards
+```
 
