@@ -39,7 +39,7 @@ Dieser Befehl baut die Docker-Images für alle Container und startet die Dienste
 
 - **Airflow Web UI** ist unter [http://localhost:8080](http://localhost:8080) zugänglich.
 - **Hadoop Web UI** für YARN ist unter [http://localhost:8088](http://localhost:8088) und für HDFS unter [http://localhost:9870](http://localhost:9870) erreichbar.
-- **Frontend Web UI** ist unter [http://localhost:3659](http://localhost:3659) erreichbar.
+- **Frontend Web UI** ist unter [http://localhost:8000](http://localhost:8000) erreichbar.
 
 Es ist möglich in der Airflow Dockerfile und Hadoop Dockerfile, die beiligende startall.sh einzubinden, was Zeit erspart da hierbei schon mein Github ETL direkt reingeladen wird und die Hadoop Commands von oben werden überflüssig
 **Für Airflow:**
