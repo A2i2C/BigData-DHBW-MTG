@@ -91,7 +91,7 @@ Das Backend stellt eine einfache API bereit, die eine GET-Anfrage verarbeitet, u
 **Beispiel-API-Endpunkt:**
 
 ```console
-GET http://localhost:5201/cards
+GET http://localhost:3000/cards
 ```
 
 ## DDL
